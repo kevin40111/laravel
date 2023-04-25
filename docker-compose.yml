@@ -1,11 +1,27 @@
-version: "3.3"
+version: "3.8"
 services:
-  mysql:
-    image: mysql:8.0
-    restart: always
-    env_file:
-      - mysql.env
-    ports:
-      - '3306:3306'
-    volumes: 
-    - ./mysql-data:/var/lib/mysql
+    php:
+        build: .
+        working_dir: /var/www
+        volumes:
+            - ./src:/var/www
+        ports:
+            - 3000:8000
+        depends_on:
+            - mysql
+            - redis
+    mysql:
+        image: mysql:8.0
+        environment:
+            - MYSQL_DATABASE=laraveldb
+            - MYSQL_USER=laravel
+            - MYSQL_PASSWORD=laravel-test
+            - MYSQL_ROOT_PASSWORD=laravel-test
+        ports:
+            - 3306:3306
+        volumes:
+            - ./db-data:/var/lib/mysql
+    redis:
+        image: redis:6.0
+        ports:
+            - 6379:6379
