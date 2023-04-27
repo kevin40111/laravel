@@ -7,6 +7,12 @@ services:
             - ./src:/var/www
         ports:
             - 3000:8000
+        command: >
+            bash -c 
+            "if [ ! -d "/var/www/vendor" ]
+                then
+                    composer install
+            fi && php artisan serve --host 0.0.0.0"
         depends_on:
             - mysql
             - redis
