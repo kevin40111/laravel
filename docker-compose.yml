@@ -2,6 +2,7 @@ version: "3.8"
 services:
     php:
         build: .
+        container_name: laravel
         working_dir: /var/www
         volumes:
             - ./src:/var/www
@@ -22,7 +23,7 @@ services:
             - MYSQL_DATABASE=laraveldb
             - MYSQL_USER=laravel
             - MYSQL_PASSWORD=laravel-test
-            - MYSQL_ROOT_PASSWORD=laravel-test
+            - MYSQL_ROOT_PASSWORD=laravel-test        
         ports:
             - 3306:3306
         volumes:
