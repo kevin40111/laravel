@@ -36,7 +36,7 @@
 5. Test Auth API
     - Setup step ( install jwt package )
         - `composer install`
-    - Register API
+    - Register API ( 註冊後，記得信箱收驗證信 )
         - [POST] http:localhost:8080/api/auth/register
             ```bash
             # post data
