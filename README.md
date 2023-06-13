@@ -30,5 +30,27 @@
 
 
     ```bash
-    $ # TODO:
+    $ php artisan migrate
     ```
+
+5. Test Auth API
+    - Setup step ( install jwt package )
+        - `composer install`
+    - Register API
+        - [POST] http:localhost:8080/api/auth/register
+            ```bash
+            # post data
+            name:example
+            email:example@gmail.com
+            password:qwer1234
+            password_confirmation:qwer1234
+            ```
+
+
+    - Login API ( 目前尚未加入 email 認證完才可以登入 )
+        - [POST] http:localhost:8080/api/auth/login
+            ```bash
+            # post data
+            email:example@gmail.com
+            password:qwer1234
+            ```
