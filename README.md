@@ -30,5 +30,32 @@
 
 
     ```bash
-    $ # TODO:
+    $ php artisan migrate
     ```
+
+5. Test Auth API
+    - Setup steps ( install jwt package )
+        1. `composer install`
+        2. `cp .env src/.env` ( 使用 gdrive 設定權限分享 )
+            - [.env download link](https://drive.google.com/file/d/1D1E0TWPbuEctc_zivG6cam1S9DL5792O/view?usp=sharing)
+        3. Generate a jwt token, will get saved in .env ( 執行指令後，會自動生成在 .env 檔案 )
+            - `php artisan jwt:secret`
+
+    - Register API ( 註冊後，記得信箱收驗證信 )
+        - [POST] http:localhost:8080/api/auth/register
+            ```bash
+            # post data
+            name:example
+            email:example@gmail.com
+            password:qwer1234
+            password_confirmation:qwer1234
+            ```
+
+
+    - Login API ( 目前尚未加入 email 認證完才可以登入 )
+        - [POST] http:localhost:8080/api/auth/login
+            ```bash
+            # post data
+            email:example@gmail.com
+            password:qwer1234
+            ```
