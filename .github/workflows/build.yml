@@ -9,9 +9,6 @@ jobs:
     name: 🎉 Build Docker images
     runs-on: ubuntu-latest
     steps:
-      - name: Dump context
-        uses: crazy-max/ghaction-dump-context@v2
-
       - name: 🚚 Get latest code
         uses: actions/checkout@v3
 
