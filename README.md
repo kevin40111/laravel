@@ -37,6 +37,7 @@
     - Setup steps ( install jwt package )
         1. `composer install`
         2. `cp .env src/.env` ( 使用 gdrive 設定權限分享 )
+            - Solve Permission Problem: `sudo chmod 775 src/.env` ( default permisson: 600 )
             - [.env download link](https://drive.google.com/file/d/1D1E0TWPbuEctc_zivG6cam1S9DL5792O/view?usp=sharing)
         3. Generate a jwt token, will get saved in .env ( 執行指令後，會自動生成在 .env 檔案 )
             - `php artisan jwt:secret`
