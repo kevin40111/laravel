@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Validator;
-use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
 {
@@ -36,6 +36,14 @@ class AuthController extends Controller
         if (!$token = auth()->attempt($validator->validated())) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
+
+        // email validation check
+        // find user's email_verified_at
+        $user = User::firstWhere('email', $request->email)->only('email_verified_at');
+        if ($user['email_verified_at'] === null) {
+            return response()->json(['error' => 'Email not verified'], 403);
+        }
+
         return $this->createNewToken($token);
     }
 /**

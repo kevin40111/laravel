@@ -53,7 +53,8 @@
             ```
 
 
-    - Login API ( 目前尚未加入 email 認證完才可以登入 )
+    - Login API ( Email 驗證完才可以登入 )
+        - 未驗證的結果: {"error":"Email not verified"}, 403
         - [POST] http:localhost:8080/api/auth/login
             ```bash
             # post data
