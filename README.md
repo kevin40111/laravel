@@ -46,7 +46,8 @@
         - [POST] http:localhost:8080/api/auth/register
             ```bash
             # post data
-            name:example
+            fullName:example
+            username:example
             email:example@gmail.com
             password:qwer1234
             password_confirmation:qwer1234
