@@ -111,11 +111,15 @@ class AuthController extends Controller
  */
     protected function createNewToken($token)
     {
+        $userData = auth()->user()->select('id', 'role', 'fullName', 'username', 'email')->get();
+        if ($userData) {
+            $userData = $userData[0];
+        }
         return response()->json([
-            'access_token' => $token,
+            'accessToken' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60,
-            'userData' => auth()->user()->select('id', 'role', 'fullName', 'username', 'email')->get(),
+            'userData' => $userData,
         ]);
     }
 }
