@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             //
             $table->string('role')->default('client');
-            $table->string('fullName');
+            $table->string('fullName')->nullable();
             $table->renameColumn('name', 'username');
         });
     }
