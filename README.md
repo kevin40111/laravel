@@ -84,3 +84,33 @@
                 password:qwer1234
                 password_confirmation:qwer1234
                 ```
+
+7. Test Change Password API
+    - Setup steps
+        1. `docker-compose up -d`
+    
+    - Change Password API
+        - [POST] http://localhost:8080/api/password/change
+
+    - Change Password Steps
+        1. Get bearer token with Login API
+        2. Paste **Change Password API**
+        3. Setup bearer token
+            1. Add **Authorization** to post header
+            2. Add **bearer-token** to **Authorization Value**
+                ```bash
+                # format
+                bearer bearer-token
+                ```
+        4. Post API with **current password** and **new password** 
+            - post example
+                ```bash
+                # post data
+                current_password:567894
+                new_password:qwer1234
+                new_password_confirmation:qwer1234
+                ```
+            - return status
+                - bearer token error: 'Unauthorized user', http-401
+                - current_password error: 'trans('auth.failed')', http-401
+                - password successfully changed: 'password successfully changed', http-200

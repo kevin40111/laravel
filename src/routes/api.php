@@ -5,8 +5,10 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\CodeCheckController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\VerifyEmailController;
+use App\Http\Controllers\ChangePasswordController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -45,5 +47,10 @@ Route::post('/email/verify/resend', function (Request $request) {
     return back()->with('message', 'Verification link sent!');
 })->middleware(['auth:api', 'throttle:6,1'])->name('verification.send');
 
+
+Route::post('/password/change', [ChangePasswordController::class, 'changePassword']);
+Route::get('/get_current_user', [ChangePasswordController::class, 'getCurrentUser']);
+
 Route::post('password/email', [ForgotPasswordController::class, '__invoke']);
 Route::post('password/reset', [ResetPasswordController::class, '__invoke']);
+
