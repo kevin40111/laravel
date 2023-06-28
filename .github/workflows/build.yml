@@ -31,7 +31,7 @@ jobs:
           context: .
           file: Dockerfile.nginx
           push: true
-          tags: ghcr.io/ender503/checkinlite-nginx:${{ github.ref_name }}
+          tags: ghcr.io/lanyastudio/checkinlite-nginx:${{ github.ref_name }}
 
       - name: PHP-FPM Build and push
         uses: docker/build-push-action@v4
@@ -39,4 +39,4 @@ jobs:
           context: .
           file: Dockerfile.php
           push: true
-          tags: ghcr.io/ender503/checkinlite-php:${{ github.ref_name }}
+          tags: ghcr.io/lanyastudio/checkinlite-php:${{ github.ref_name }}
