@@ -1,0 +1,42 @@
+on:
+  push:
+    tags:
+      - "*"
+
+name: 🚀 Build Docker images on Tag created
+jobs:
+  build:
+    name: 🎉 Build Docker images
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        uses: php-actions/composer@v6
+        with:
+          dev: no
+          args: --working-dir src --profile --ignore-platform-reqs
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Ngnix Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile.nginx
+          push: true
+          tags: ghcr.io/ender503/checkinlite-nginx:${{ github.ref_name }}
+
+      - name: PHP-FPM Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile.php
+          push: true
+          tags: ghcr.io/ender503/checkinlite-php:${{ github.ref_name }}

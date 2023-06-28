@@ -16,3 +16,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/test', function () {
+    return view('welcome');
+});
+
+Route::post('/api/jwt/login', function () {
+    // return view('welcome');
+    $json = '{"accessToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjg2MjE2MTYxLCJleHAiOjE2ODYyMTY0NjF9.sYAPpaOOnjGyPpAtAaen9QxWkF1HKPRPdnFKmdCxBSs","userData":{"id":1,"role":"admin","fullName":"John Doe","username":"johndoe","email":"admin@vuexy.com"}}';
+    return json_decode($json);
+});
