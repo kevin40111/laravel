@@ -46,7 +46,8 @@
         - [POST] http:localhost:8080/api/auth/register
             ```bash
             # post data
-            name:example
+            fullName:example
+            username:example
             email:example@gmail.com
             password:qwer1234
             password_confirmation:qwer1234
@@ -61,6 +62,28 @@
             email:example@gmail.com
             password:qwer1234
             ```
+
+6. Test Forget and Reset Password API
+    - Setup steps
+        1. `docker-compose up -d`
+        2. `php artisan migrate`
+    
+    - Forget Password API
+        1. Receive reset code from email
+            - [POST] http:localhost:8080/api/password/email
+                ```bash
+                # post data
+                email:example@gmail.com
+                ```
+        2. Reset password with reset code and **new password** 
+            - reset code expired in one hour
+            - [POST] http:localhost:8080/api/password/reset
+                ```bash
+                # post data
+                code:567894
+                password:qwer1234
+                password_confirmation:qwer1234
+                ```
 
 7. Test Change Password API
     - Setup steps

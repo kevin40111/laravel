@@ -15,7 +15,9 @@ services:
 
   php:
     container_name: php
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     volumes:
       - ./src:/var/www/html
 
