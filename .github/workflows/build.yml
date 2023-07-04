@@ -40,3 +40,15 @@ jobs:
           file: Dockerfile.php
           push: true
           tags: ghcr.io/lanyastudio/checkinlite-php:${{ github.ref_name }}
+
+  deploy:
+    name: Deploy to Nomad
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tigger deploy workflow
+        run: |
+          curl -XPOST -H "Authorization: token ${{ secrets.DEPLOY_TOKEN }}" \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Content-Type: application/json" \
+            https://api.github.com/repos/LanyaStudio/nomad-jobs/dispatches \
+            --data '{"event_type": "checkinlite-laravel", "client_payload": { "version": "${{ github.ref_name }}" }}'
