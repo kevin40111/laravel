@@ -41,6 +41,12 @@ $app->singleton(
     App\Exceptions\Handler::class
 );
 
+// set the environment path to the local directory if it exists
+$nomad_env_path = '/local';
+if (is_dir($nomad_env_path)) {
+    $app->useEnvironmentPath($nomad_env_path);
+}
+
 /*
 |--------------------------------------------------------------------------
 | Return The Application
