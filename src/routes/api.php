@@ -6,6 +6,7 @@ use App\Http\Controllers\CodeCheckController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\VerifyEmailController;
 use App\Http\Controllers\ChangePasswordController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -53,4 +54,6 @@ Route::get('/get_current_user', [ChangePasswordController::class, 'getCurrentUse
 
 Route::post('password/email', [ForgotPasswordController::class, '__invoke']);
 Route::post('password/reset', [ResetPasswordController::class, '__invoke']);
+
+Route::get('/get_user_list', [UserController::class, 'getUserList']);
 
