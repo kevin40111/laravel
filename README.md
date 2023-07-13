@@ -129,3 +129,9 @@
         - permission error: role is not admin, http-403
         - successfully: get result
 
+9. Test Update User Profile API
+    - Setup steps
+        1. `docker-compose up -d`
+        2. `php artisan migrate`
+
+
