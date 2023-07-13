@@ -13,6 +13,7 @@ class UserProfile extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
+        'id',
         'billing',
         'fullName',
         'company',

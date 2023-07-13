@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\UserProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -25,7 +26,7 @@ class UserController extends Controller
         return response()->json($users);
     }
 
-    public function getUserInfo(Request $request)
+    public function getUserProfile(Request $request)
     {
         // 取得目前已認證的使用者
         $user = Auth::user();
@@ -38,7 +39,7 @@ class UserController extends Controller
             return response()->json(['message' => 'Permission denied'], 403);
         }
 
-        $user_by_id = User::find($request->route('id'));
+        $user_by_id = UserProfile::find($request->route('id'));
         return response()->json($user_by_id);
     }
 }

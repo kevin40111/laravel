@@ -53,4 +53,5 @@ Route::post('password/email', [ForgotPasswordController::class, '__invoke']);
 Route::post('password/reset', [ResetPasswordController::class, '__invoke']);
 
 Route::get('/get_user_list', [UserController::class, 'getUserList']);
-Route::get('/get_user/{id}', [UserController::class, 'getUserInfo']);
+Route::get('/get_user/{id}', [UserController::class, 'getUserProfile']);
+
