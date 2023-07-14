@@ -133,5 +133,13 @@
     - Setup steps
         1. `docker-compose up -d`
         2. `php artisan migrate`
+        3. setup Authorization with bear token ( use login api to get )
 
+    - API
+        - Update User Profile: [PATCH] http://localhost:8080/api/update_user/{user_id}
+            - check user profile table if exists user_id
+
+    - return status
+        - bearer token error: 'Unauthorized user', http-401
+        - successfully: get updated result
 
