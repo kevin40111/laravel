@@ -55,3 +55,5 @@ Route::post('password/reset', [ResetPasswordController::class, '__invoke']);
 Route::get('/get_user_list', [UserController::class, 'getUserList']);
 Route::get('/get_user/{id}', [UserController::class, 'getUserProfile']);
 
+Route::patch('/update_user/{id}', [UserController::class, 'updateUserProfile']);
+
