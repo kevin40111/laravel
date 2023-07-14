@@ -13,6 +13,4 @@ class ResetCodePassword extends Model
         'email',
         'code',
     ];
-
-    protected $primaryKey = 'email';
 }

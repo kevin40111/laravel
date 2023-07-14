@@ -1,11 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ChangePasswordController;
-use App\Http\Controllers\ForgotPasswordController;
-use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\VerifyEmailController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,37 +16,61 @@ use Illuminate\Support\Facades\Route;
 |
  */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware("auth:sanctum")->get("/user", function (Request $request) {
     return $request->user();
 });
 
-Route::group([
-    'middleware' => 'api',
-    'prefix' => 'auth',
-], function ($router) {
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/refresh', [AuthController::class, 'refresh']);
-    Route::get('/user-profile', [AuthController::class, 'userProfile']);
+Route::get("/test", function () {
+    return response()->json([
+        "message" => "Hello World!",
+    ]);
 });
 
-// Verify email
-Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
-    ->middleware(['signed', 'throttle:6,1'])
-    ->name('verification.verify');
+Route::group(
+    [
+        "middleware" => ["api"],
+        "prefix" => "auth",
+    ],
+    function ($router) {
+        // TODO: remove this route?
+        Route::post("/logout", [AuthController::class, "logout"]);
 
-// Resend link to verify email
-Route::post('/email/verify/resend', function (Request $request) {
-    $request->user()->sendEmailVerificationNotification();
-    return back()->with('message', 'Verification link sent!');
-})->middleware(['auth:api', 'throttle:6,1'])->name('verification.send');
+        Route::post("/login", [AuthController::class, "login"]);
+        Route::post("/register", [AuthController::class, "register"]);
 
-Route::post('/password/change', [ChangePasswordController::class, 'changePassword']);
-Route::get('/get_current_user', [ChangePasswordController::class, 'getCurrentUser']);
+        Route::post("/confirm/{token}", [AuthController::class, "confirm"]);
 
-Route::post('password/email', [ForgotPasswordController::class, '__invoke']);
-Route::post('password/reset', [ResetPasswordController::class, '__invoke']);
+        Route::post("/forgot-password", [
+            AuthController::class,
+            "forgotPassword",
+        ]);
 
-Route::get('/get_user_list', [UserController::class, 'getUserList']);
-Route::get('/get_user/{id}', [UserController::class, 'getUserInfo']);
+        Route::get("/reset-password/{code}", [
+            AuthController::class,
+            "getEmailByCode",
+        ]);
+        Route::post("/reset-password", [
+            AuthController::class,
+            "resetPassword",
+        ]);
+
+        // TODO: wip
+        Route::post("/refresh", [AuthController::class, "refresh"]);
+    }
+);
+
+Route::group(
+    [
+        "middleware" => ["api"],
+        "prefix" => "/",
+    ],
+    function ($router) {
+        Route::get("/get_user_list", [UserController::class, "getUserList"]);
+        Route::get("/get_user/{id}", [UserController::class, "getUserInfo"]);
+        Route::get("/user-profile", [UserController::class, "userProfile"]);
+        Route::post("/password/change", [
+            UserController::class,
+            "changePassword",
+        ]);
+    }
+);

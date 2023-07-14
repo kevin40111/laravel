@@ -1,2 +1,6 @@
 db-data
 .env
+
+.vscode
+
+node_modules/

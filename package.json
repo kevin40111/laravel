@@ -1,0 +1,23 @@
+{
+  "name": "checkinlite-laravel",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:ender503/checkinlite-laravel.git",
+  "author": "ender503 <ender503.tw@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "prettier": "prettier",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@prettier/plugin-php": "^0.19.6",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.3",
+    "prettier": "^2.8.8"
+  },
+  "lint-staged": {
+    "*.{php}": [
+      "prettier --write"
+    ]
+  }
+}
