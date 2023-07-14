@@ -136,3 +136,17 @@
           - bearer token error: 'Unauthorized user', http-401
           - current_password error: 'trans('auth.failed')', http-401
           - password successfully changed: 'password successfully changed', http-200
+
+### Test Get User List and User Info API
+    - Setup steps
+        1. `docker-compose up -d`
+        2. setup Authorization with bear token ( use login api to get )
+
+    - API
+        - Get User List: [GET] http://localhost:8080/api/get_user_list
+        - Get User Info: [GET] http://localhost:8080/api/get_user/{user_id}
+
+    - return status
+        - bearer token error: 'Unauthorized user', http-401
+        - permission error: role is not admin, http-403
+        - successfully: get result

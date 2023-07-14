@@ -65,6 +65,8 @@ Route::group(
         "prefix" => "/",
     ],
     function ($router) {
+        Route::get("/get_user_list", [UserController::class, "getUserList"]);
+        Route::get("/get_user/{id}", [UserController::class, "getUserInfo"]);
         Route::get("/user-profile", [UserController::class, "userProfile"]);
         Route::post("/password/change", [
             UserController::class,

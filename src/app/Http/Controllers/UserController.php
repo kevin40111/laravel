@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
@@ -49,5 +50,39 @@ class UserController extends Controller
             ["message" => "Password successfully changed."],
             200
         );
+    }
+
+    public function getUserList()
+    {
+        // 取得目前已認證的使用者
+        $user = Auth::user();
+
+        if ($user === null) {
+            return response()->json(["message" => "Unauthorized user"], 401);
+        }
+
+        if ($user->role !== "admin") {
+            return response()->json(["message" => "Permission denied"], 403);
+        }
+
+        $users = User::all();
+        return response()->json($users);
+    }
+
+    public function getUserInfo(Request $request)
+    {
+        // 取得目前已認證的使用者
+        $user = Auth::user();
+
+        if ($user === null) {
+            return response()->json(["message" => "Unauthorized user"], 401);
+        }
+
+        if ($user->role !== "admin") {
+            return response()->json(["message" => "Permission denied"], 403);
+        }
+
+        $user_by_id = User::find($request->route("id"));
+        return response()->json($user_by_id);
     }
 }
