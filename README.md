@@ -38,6 +38,15 @@
    $ php artisan db:seed
    ```
 
+## Development Tools
+ - Intall [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) VSCode Extension
+ - Install the dependencies
+
+   ```bash
+   $ yarn install
+   ```
+-
+
 ## Test API
 
 ### Test Auth API
