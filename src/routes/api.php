@@ -56,4 +56,5 @@ Route::get('/get_user_list', [UserController::class, 'getUserList']);
 Route::get('/get_user/{id}', [UserController::class, 'getUserProfile']);
 
 Route::patch('/update_user/{id}', [UserController::class, 'updateUserProfile']);
+Route::post('/update_user_role/{id}', [UserController::class, 'updateUserRole']);
 

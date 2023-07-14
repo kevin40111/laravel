@@ -138,8 +138,11 @@
     - API
         - Update User Profile: [PATCH] http://localhost:8080/api/update_user/{user_id}
             - check user profile table if exists user_id
+        - Update User Role: [POST] http://localhost:8080/api/update_user_role/{user_id}
 
     - return status
         - bearer token error: 'Unauthorized user', http-401
+        - permission error: role is not admin, http-403
+            - only for Update User Role API
         - successfully: get updated result
 
