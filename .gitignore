@@ -4,3 +4,5 @@ db-data
 .vscode
 
 node_modules/
+
+_ide_helper.php
