@@ -6,6 +6,11 @@ use App\Models\User;
 
 class UserRepository
 {
+    public function create(mixed $data)
+    {
+        return User::create($data);
+    }
+
     /**
      * @param string $email
      * @return null|mixed

@@ -146,7 +146,7 @@ class AuthController extends Controller
             );
         }
 
-        $user = User::create([
+        $user = $this->users->create([
             "username" => $register->username,
             "email" => $register->email,
             "password" => $register->password,
