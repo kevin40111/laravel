@@ -33,18 +33,12 @@ class AuthController extends Controller
         $validated = $validator->validated();
         $user = User::where("email", $validated["email"])->first();
         if (is_null($user)) {
-            return response()->json(
-                ["error" => "Unauthorized", "message" => "User not found"],
-                401
-            );
+            return response()->json(["message" => "User not found"], 401);
         }
 
         $token = auth()->attempt($validated);
         if (is_bool($token) && $token == false) {
-            return response()->json(
-                ["error" => "Unauthorized", "message" => "Password incorrect"],
-                401
-            );
+            return response()->json(["message" => "Password incorrect"], 401);
         }
 
         return $this->createNewToken($token);
@@ -79,10 +73,7 @@ class AuthController extends Controller
         $validated = $validator->validated();
         if ($this->isUserExist($validated["email"])) {
             return response()->json(
-                [
-                    "error" => "Unauthorized",
-                    "message" => "User already registered",
-                ],
+                ["message" => "User already registered"],
                 401
             );
         }
@@ -113,7 +104,6 @@ class AuthController extends Controller
         if ($this->isUserExist($validated["email"])) {
             return response()->json(
                 [
-                    "error" => "Unauthorized",
                     "message" => "User already registered",
                 ],
                 401
@@ -124,7 +114,6 @@ class AuthController extends Controller
         if (is_null($register)) {
             return response()->json(
                 [
-                    "error" => "Unauthorized",
                     "message" => "Register record not found",
                 ],
                 401
@@ -141,23 +130,17 @@ class AuthController extends Controller
         $token = $request->route("token");
         $register = UserRegister::where("token", $token)->first();
         if (is_null($register)) {
-            return response()->json(
-                ["error" => "Unauthorized", "message" => "Invalid token"],
-                401
-            );
+            return response()->json(["message" => "Invalid token"], 401);
         }
 
         if (is_null($register->used_at) == false) {
-            return response()->json(
-                ["error" => "Unauthorized", "message" => "Token is used"],
-                401
-            );
+            return response()->json(["message" => "Token is used"], 401);
         }
 
-        if ($this->isUserExist($register->email)) {
+        $user = $this->users->findByEmail($register->email);
+        if (is_null($user) == false) {
             return response()->json(
                 [
-                    "error" => "Unauthorized",
                     "message" => "User already registered",
                 ],
                 401
@@ -189,10 +172,7 @@ class AuthController extends Controller
         $validated = $validator->validated();
 
         if ($this->isUserExist($validated["email"]) == false) {
-            return response()->json(
-                ["error" => "Unauthorized", "message" => "User not found"],
-                404
-            );
+            return response()->json(["message" => "User not found"], 404);
         }
 
         // Delete all old code that user send before.
