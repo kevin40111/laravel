@@ -3,22 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
+use App\Models\UserRegister;
+use App\Models\ResetCodePassword;
+use App\Mail\RegisterMail;
+use App\Mail\ResetPasswordMail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Validator;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
+
+use Ramsey\Uuid\Uuid;
 
 class AuthController extends Controller
 {
-    /**
-     * Create a new AuthController instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->middleware('auth:api', ['except' => ['login', 'register']]);
-    }
     /**
      * Get a JWT via given credentials.
      *
@@ -26,99 +22,303 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|string|min:6',
+        $validator = Validator::make($request->post(), [
+            "email" => "required|email",
+            "password" => "required|string|min:5",
         ]);
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-        if (!$token = auth()->attempt($validator->validated())) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+
+        $validated = $validator->validated();
+        $user = User::where("email", $validated["email"])->first();
+        if (is_null($user)) {
+            return response()->json(
+                ["error" => "Unauthorized", "message" => "User not found"],
+                401
+            );
         }
 
-        // email validation check
-        // find user's email_verified_at
-        $user = User::firstWhere('email', $request->email)->only('email_verified_at');
-        if ($user['email_verified_at'] === null) {
-            return response()->json(['error' => 'Email not verified'], 403);
+        $token = auth()->attempt($validated);
+        if (is_bool($token) && $token == false) {
+            return response()->json(
+                ["error" => "Unauthorized", "message" => "Password incorrect"],
+                401
+            );
         }
 
         return $this->createNewToken($token);
     }
-/**
- * Register a User.
- *
- * @return \Illuminate\Http\JsonResponse
- */
+
+    private function isUserExist(string $email)
+    {
+        $user = User::where("email", $email)->first();
+        if (is_null($user)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Register a User.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'username' => 'required|string|between:2,100',
-            'email' => 'required|string|email|max:100|unique:users',
-            'password' => 'required|string|min:6',
+        $validator = Validator::make($request->post(), [
+            "username" => "required|string|between:2,100",
+            "email" => "required|string|email|max:100",
+            "password" => "required|string|min:6",
         ]);
+
         if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
         }
-        $user = User::create(array_merge(
+
+        $validated = $validator->validated();
+        if ($this->isUserExist($validated["email"])) {
+            return response()->json(
+                [
+                    "error" => "Unauthorized",
+                    "message" => "User already registered",
+                ],
+                401
+            );
+        }
+
+        $data = array_merge(
             $validator->validated(),
-            ['password' => bcrypt($request->password)]
-        ));
+            ["password" => bcrypt($request->password)],
+            ["token" => Uuid::uuid4()->toString()]
+        );
 
-        event(new Registered($user));
+        $register = UserRegister::create($data);
+        Mail::to($register)->send(new RegisterMail($register));
 
-        return response()->json([
-            'message' => 'User successfully registered',
-            'user' => $user,
-        ], 201);
+        return response()->json($register, 201);
     }
-/**
- * Log the user out (Invalidate the token).
- *
- * @return \Illuminate\Http\JsonResponse
- */
+
+    public function registerResend(Request $request)
+    {
+        $validator = Validator::make($request->post(), [
+            "email" => "required|string|email|max:100",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        $validated = $validator->validated();
+        if ($this->isUserExist($validated["email"])) {
+            return response()->json(
+                [
+                    "error" => "Unauthorized",
+                    "message" => "User already registered",
+                ],
+                401
+            );
+        }
+
+        $register = UserRegister::where("email", $validated["email"])->first();
+        if (is_null($register)) {
+            return response()->json(
+                [
+                    "error" => "Unauthorized",
+                    "message" => "Register record not found",
+                ],
+                401
+            );
+        }
+
+        Mail::to($register)->send(new RegisterMail($register->token));
+
+        return response()->json($register, 201);
+    }
+
+    public function confirm(Request $request)
+    {
+        $token = $request->route("token");
+        $register = UserRegister::where("token", $token)->first();
+        if (is_null($register)) {
+            return response()->json(
+                ["error" => "Unauthorized", "message" => "Invalid token"],
+                401
+            );
+        }
+
+        if (is_null($register->used_at) == false) {
+            return response()->json(
+                ["error" => "Unauthorized", "message" => "Token is used"],
+                401
+            );
+        }
+
+        if ($this->isUserExist($register->email)) {
+            return response()->json(
+                [
+                    "error" => "Unauthorized",
+                    "message" => "User already registered",
+                ],
+                401
+            );
+        }
+
+        $user = User::create([
+            "username" => $register->username,
+            "email" => $register->email,
+            "password" => $register->password,
+        ]);
+
+        $register->used_at = now();
+        $register->save();
+
+        return response()->json($user, 201);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $validator = Validator::make($request->post(), [
+            "email" => "required|email",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $validated = $validator->validated();
+
+        if ($this->isUserExist($validated["email"]) == false) {
+            return response()->json(
+                ["error" => "Unauthorized", "message" => "User not found"],
+                404
+            );
+        }
+
+        // Delete all old code that user send before.
+        ResetCodePassword::where("email", $validated["email"])->delete();
+
+        $data = array_merge($validated, ["code" => Uuid::uuid4()->toString()]);
+
+        $resetPassword = ResetCodePassword::create($data);
+
+        // Send email to user
+        Mail::to($request->email)->send(new ResetPasswordMail($resetPassword));
+
+        return response(["message" => trans("passwords.sent")], 200);
+    }
+
+    public function getEmailByCode(Request $request)
+    {
+        $code = $request->route("code");
+
+        // find the code
+        $resetPasswordRequest = ResetCodePassword::where(
+            "code",
+            $code
+        )->first();
+        if (is_null($resetPasswordRequest)) {
+            return response(["message" => "Invalid reset password code"], 404);
+        }
+
+        // check if it does not expired: the time is one hour
+        if ($resetPasswordRequest->created_at->addHour()->isPast()) {
+            return response(
+                ["message" => trans("passwords.code_is_expire")],
+                422
+            );
+        }
+
+        return response()->json($resetPasswordRequest, 200);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            "code" => "required|string|exists:reset_code_passwords",
+            "password" => "required|string|min:6",
+        ]);
+
+        // find the code
+        $passwordReset = ResetCodePassword::firstWhere("code", $request->code);
+
+        // check if it does not expired: the time is one hour
+        if ($passwordReset->created_at->addHour()->isPast()) {
+            return response(
+                ["message" => trans("passwords.code_is_expire")],
+                422
+            );
+        }
+
+        // find user's email
+        $user = User::firstWhere("email", $passwordReset->email);
+
+        // Retrieve the password from the request
+        $password = $request->only("password")["password"];
+
+        // Hash the password
+        $hashedPassword = bcrypt($password);
+
+        // Replace the original password value in the request data
+        $request->merge(["password" => $hashedPassword]);
+
+        // update user password
+        $user->update($request->only("password"));
+
+        // delete current code
+        $passwordReset->delete();
+
+        return response(
+            ["message" => "password has been successfully reset"],
+            200
+        );
+    }
+
+    /**
+     * Log the user out (Invalidate the token).
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function logout()
     {
         auth()->logout();
-        return response()->json(['message' => 'User successfully signed out']);
+        return response()->json(["message" => "User successfully signed out"]);
     }
-/**
- * Refresh a token.
- *
- * @return \Illuminate\Http\JsonResponse
- */
+
+    /**
+     * Refresh a token.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function refresh()
     {
         return $this->createNewToken(auth()->refresh());
     }
-/**
- * Get the authenticated User.
- *
- * @return \Illuminate\Http\JsonResponse
- */
-    public function userProfile()
-    {
-        return response()->json(auth()->user());
-    }
-/**
- * Get the token array structure.
- *
- * @param  string $token
- *
- * @return \Illuminate\Http\JsonResponse
- */
+
+    /**
+     * Get the token array structure.
+     *
+     * @param  string $token
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     protected function createNewToken($token)
     {
-        $userData = auth()->user()->select('id', 'role', 'fullName', 'username', 'email')->get();
+        $userData = auth()
+            ->user()
+            ->select("id", "role", "fullName", "username", "email")
+            ->get();
         if ($userData) {
             $userData = $userData[0];
         }
         return response()->json([
-            'accessToken' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60,
-            'userData' => $userData,
+            "accessToken" => $token,
+            "token_type" => "bearer",
+            "expires_in" =>
+                auth()
+                    ->factory()
+                    ->getTTL() * 60,
+            "userData" => $userData,
         ]);
     }
 }
