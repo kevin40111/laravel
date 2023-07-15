@@ -47,6 +47,17 @@ class AuthController extends Controller
             return response()->json(["message" => "Password incorrect"], 401);
         }
 
+        $userData = auth()->user();
+
+        $response = [
+            "accessToken" => $token,
+            "userData" => $userData,
+        ];
+
+        if ($response) {
+            return response()->json($response, 401);
+        }
+
         return $this->createNewToken($token);
     }
 
@@ -266,42 +277,5 @@ class AuthController extends Controller
     {
         auth()->logout();
         return response()->json(["message" => "User successfully signed out"]);
-    }
-
-    /**
-     * Refresh a token.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function refresh()
-    {
-        return $this->createNewToken(auth()->refresh());
-    }
-
-    /**
-     * Get the token array structure.
-     *
-     * @param  string $token
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    protected function createNewToken($token)
-    {
-        $userData = auth()
-            ->user()
-            ->select("id", "role", "fullName", "username", "email")
-            ->get();
-        if ($userData) {
-            $userData = $userData[0];
-        }
-        return response()->json([
-            "accessToken" => $token,
-            "token_type" => "bearer",
-            "expires_in" =>
-                auth()
-                    ->factory()
-                    ->getTTL() * 60,
-            "userData" => $userData,
-        ]);
     }
 }
