@@ -54,11 +54,7 @@ class AuthController extends Controller
             "userData" => $userData,
         ];
 
-        if ($response) {
-            return response()->json($response, 401);
-        }
-
-        return $this->createNewToken($token);
+        return response()->json($response, 200);
     }
 
     /**
