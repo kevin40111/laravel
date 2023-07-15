@@ -7,6 +7,7 @@ use App\Models\UserRegister;
 use App\Models\ResetCodePassword;
 use App\Mail\RegisterMail;
 use App\Mail\ResetPasswordMail;
+use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -15,6 +16,10 @@ use Ramsey\Uuid\Uuid;
 
 class AuthController extends Controller
 {
+    public function __construct(protected UserRepository $users)
+    {
+    }
+
     /**
      * Get a JWT via given credentials.
      *
@@ -26,12 +31,13 @@ class AuthController extends Controller
             "email" => "required|email",
             "password" => "required|string|min:5",
         ]);
+
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
         $validated = $validator->validated();
-        $user = User::where("email", $validated["email"])->first();
+        $user = $this->users->findByEmail($validated["email"]);
         if (is_null($user)) {
             return response()->json(["message" => "User not found"], 401);
         }
@@ -42,15 +48,6 @@ class AuthController extends Controller
         }
 
         return $this->createNewToken($token);
-    }
-
-    private function isUserExist(string $email)
-    {
-        $user = User::where("email", $email)->first();
-        if (is_null($user)) {
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -71,7 +68,8 @@ class AuthController extends Controller
         }
 
         $validated = $validator->validated();
-        if ($this->isUserExist($validated["email"])) {
+        $user = $this->users->findByEmail($validated["email"]);
+        if (is_null($user) == false) {
             return response()->json(
                 ["message" => "User already registered"],
                 401
@@ -101,7 +99,8 @@ class AuthController extends Controller
         }
 
         $validated = $validator->validated();
-        if ($this->isUserExist($validated["email"])) {
+        $user = $this->users->findByEmail($validated["email"]);
+        if (is_null($user) == false) {
             return response()->json(
                 [
                     "message" => "User already registered",
@@ -171,7 +170,8 @@ class AuthController extends Controller
 
         $validated = $validator->validated();
 
-        if ($this->isUserExist($validated["email"]) == false) {
+        $user = $this->users->findByEmail($validated["email"]);
+        if (is_null($user)) {
             return response()->json(["message" => "User not found"], 404);
         }
 
@@ -231,7 +231,10 @@ class AuthController extends Controller
         }
 
         // find user's email
-        $user = User::firstWhere("email", $passwordReset->email);
+        $user = $this->users->findByEmail($passwordReset->email);
+        if (is_null($user)) {
+            return response(["message" => "User not found"], 404);
+        }
 
         // Retrieve the password from the request
         $password = $request->only("password")["password"];
