@@ -153,4 +153,21 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Updated successfully', 'user' => $user, 'data'=>$data]);
     }
+
+    public function getUserStatus(Request $request)
+    {
+        // 取得目前已認證的使用者
+        $user = Auth::user();
+
+        if ($user === null) {
+            return response()->json(['message' => 'Unauthorized user'], 401);
+        }
+
+        if ($user->role !== 'admin') {
+            return response()->json(['message' => 'Permission denied'], 403);
+        }
+
+        $user_status = UserProfile::find($request->route('id'))->status;
+        return response()->json($user_status);
+    }
 }
