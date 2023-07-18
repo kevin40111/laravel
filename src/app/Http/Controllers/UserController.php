@@ -68,7 +68,7 @@ class UserController extends Controller
             return response()->json(["message" => "Permission denied"], 403);
         }
 
-        $users = User::all();
+        $users = UserProfile::all();
         return response()->json($users);
     }
 
