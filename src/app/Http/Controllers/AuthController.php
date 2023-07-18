@@ -52,7 +52,7 @@ class AuthController extends Controller
 
     private function isUserExist(string $email)
     {
-        $user = User::where("email", $email)->first();
+        $user = UserRegister::where("email", $email)->first();
         if (is_null($user)) {
             return false;
         }
