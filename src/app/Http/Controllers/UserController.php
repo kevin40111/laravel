@@ -118,7 +118,7 @@ class UserController extends Controller
         $user->update($data);
 
 
-        return response()->json(['message' => 'Updated successfully', 'user' => $user, 'data'=>$data]);
+        return response()->json(['user' => $user]);
     }
 
     public function updateUserRole(Request $request)
@@ -151,7 +151,7 @@ class UserController extends Controller
         $user->update($data);
 
 
-        return response()->json(['message' => 'Updated successfully', 'user' => $user, 'data'=>$data]);
+        return response()->json(['user' => $user]);
     }
 
     public function getUserStatus(Request $request)
