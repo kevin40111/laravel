@@ -16,7 +16,7 @@
     "prettier": "^2.8.8"
   },
   "lint-staged": {
-    "*.{php}": [
+    "*.php": [
       "prettier --write"
     ]
   }

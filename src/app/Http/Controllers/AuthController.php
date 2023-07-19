@@ -7,6 +7,7 @@ use App\Models\UserRegister;
 use App\Models\ResetCodePassword;
 use App\Mail\RegisterMail;
 use App\Mail\ResetPasswordMail;
+use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -15,6 +16,10 @@ use Ramsey\Uuid\Uuid;
 
 class AuthController extends Controller
 {
+    public function __construct(protected UserRepository $users)
+    {
+    }
+
     /**
      * Get a JWT via given credentials.
      *
@@ -26,30 +31,32 @@ class AuthController extends Controller
             "email" => "required|email",
             "password" => "required|string|min:5",
         ]);
+
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
         $validated = $validator->validated();
-        $user = User::where("email", $validated["email"])->first();
+        $user = $this->users->findByEmail($validated["email"]);
         if (is_null($user)) {
-            return response()->json(
-                ["error" => "Unauthorized", "message" => "User not found"],
-                401
-            );
+            return response()->json(["message" => "User not found"], 401);
         }
 
         $token = auth()->attempt($validated);
         if (is_bool($token) && $token == false) {
-            return response()->json(
-                ["error" => "Unauthorized", "message" => "Password incorrect"],
-                401
-            );
+            return response()->json(["message" => "Password incorrect"], 401);
         }
 
-        return $this->createNewToken($token);
-    }
+        $userData = auth()->user();
+        $response = [
+            "accessToken" => $token,
+            "userData" => $userData,
+        ];
 
+        return response()->json($response, 200);
+
+    }
+  
     private function isUserExist(string $email)
     {
         $user = UserRegister::where("email", $email)->first();
@@ -77,12 +84,10 @@ class AuthController extends Controller
         }
 
         $validated = $validator->validated();
-        if ($this->isUserExist($validated["email"])) {
+        $user = $this->users->findByEmail($validated["email"]);
+        if (is_null($user) == false) {
             return response()->json(
-                [
-                    "error" => "Unauthorized",
-                    "message" => "User already registered",
-                ],
+                ["message" => "User already registered"],
                 401
             );
         }
@@ -110,10 +115,10 @@ class AuthController extends Controller
         }
 
         $validated = $validator->validated();
-        if ($this->isUserExist($validated["email"])) {
+        $user = $this->users->findByEmail($validated["email"]);
+        if (is_null($user) == false) {
             return response()->json(
                 [
-                    "error" => "Unauthorized",
                     "message" => "User already registered",
                 ],
                 401
@@ -124,7 +129,6 @@ class AuthController extends Controller
         if (is_null($register)) {
             return response()->json(
                 [
-                    "error" => "Unauthorized",
                     "message" => "Register record not found",
                 ],
                 401
@@ -141,30 +145,24 @@ class AuthController extends Controller
         $token = $request->route("token");
         $register = UserRegister::where("token", $token)->first();
         if (is_null($register)) {
-            return response()->json(
-                ["error" => "Unauthorized", "message" => "Invalid token"],
-                401
-            );
+            return response()->json(["message" => "Invalid token"], 401);
         }
 
         if (is_null($register->used_at) == false) {
-            return response()->json(
-                ["error" => "Unauthorized", "message" => "Token is used"],
-                401
-            );
+            return response()->json(["message" => "Token is used"], 401);
         }
 
-        if ($this->isUserExist($register->email)) {
+        $user = $this->users->findByEmail($register->email);
+        if (is_null($user) == false) {
             return response()->json(
                 [
-                    "error" => "Unauthorized",
                     "message" => "User already registered",
                 ],
                 401
             );
         }
 
-        $user = User::create([
+        $user = $this->users->create([
             "username" => $register->username,
             "email" => $register->email,
             "password" => $register->password,
@@ -188,11 +186,9 @@ class AuthController extends Controller
 
         $validated = $validator->validated();
 
-        if ($this->isUserExist($validated["email"]) == false) {
-            return response()->json(
-                ["error" => "Unauthorized", "message" => "User not found"],
-                404
-            );
+        $user = $this->users->findByEmail($validated["email"]);
+        if (is_null($user)) {
+            return response()->json(["message" => "User not found"], 404);
         }
 
         // Delete all old code that user send before.
@@ -251,7 +247,10 @@ class AuthController extends Controller
         }
 
         // find user's email
-        $user = User::firstWhere("email", $passwordReset->email);
+        $user = $this->users->findByEmail($passwordReset->email);
+        if (is_null($user)) {
+            return response(["message" => "User not found"], 404);
+        }
 
         // Retrieve the password from the request
         $password = $request->only("password")["password"];
@@ -283,42 +282,5 @@ class AuthController extends Controller
     {
         auth()->logout();
         return response()->json(["message" => "User successfully signed out"]);
-    }
-
-    /**
-     * Refresh a token.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function refresh()
-    {
-        return $this->createNewToken(auth()->refresh());
-    }
-
-    /**
-     * Get the token array structure.
-     *
-     * @param  string $token
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    protected function createNewToken($token)
-    {
-        $userData = auth()
-            ->user()
-            ->select("id", "role", "fullName", "username", "email")
-            ->get();
-        if ($userData) {
-            $userData = $userData[0];
-        }
-        return response()->json([
-            "accessToken" => $token,
-            "token_type" => "bearer",
-            "expires_in" =>
-                auth()
-                    ->factory()
-                    ->getTTL() * 60,
-            "userData" => $userData,
-        ]);
     }
 }
