@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Models\UserRegister;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use Illuminate\Support\Facades\Hash;
-
 
 class UserController extends Controller
 {
@@ -85,7 +85,7 @@ class UserController extends Controller
             return response()->json(["message" => "Permission denied"], 403);
         }
 
-        $user_by_id = UserProfile::find($request->route('id'));
+        $user_by_id = UserProfile::find($request->route("id"));
 
         return response()->json($user_by_id);
     }
@@ -96,29 +96,49 @@ class UserController extends Controller
         $user = Auth::user();
 
         if ($user === null) {
-            return response()->json(['message' => 'Unauthorized user'], 401);
+            return response()->json(
+                ["message" => "Unauthorized user", "user" => $user],
+                401
+            );
         }
 
         // if ($user->role !== 'admin') {
         //     return response()->json(['message' => 'Permission denied'], 403);
         // }
 
-        $user = UserProfile::find($request->route('id'));
+        $target_user = UserRegister::find($request->route("id"));
+        if ($target_user === null) {
+            return response()->json(
+                ["message" => "Target user not found"],
+                404
+            );
+        }
+
+        // check user_register'user exists in user profile table
+        $user_register = UserRegister::with("user_profile")->findOrFail(
+            $request->route("id")
+        );
 
         $data = $request->post();
 
-        // Validate the request data todo list
-        //  $validatedData = $request->validate([
-        //     'name' => 'required|string|max:255',
-        //     'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-        //     // Additional validation rules for other fields
-        // ]);
+        if ($user_register->user_profile === null) {
+            // user doesn't exist in user profile
+            $new_user_profile = new UserProfile($data);
+            $new_user_profile["username"] = $user["username"];
+            $new_user_profile["email"] = $user["email"];
+            $user_register->user_profile()->save($new_user_profile);
+        } else {
+            // Update the user in user profile
+            $user_register->user_profile->update($data);
+        }
 
-        // Update the user
-        $user->update($data);
+        $user_register = UserRegister::with("user_profile")->findOrFail(
+            $request->route("id")
+        );
 
-
-        return response()->json(['user' => $user]);
+        return response()->json([
+            "user_profile" => $user_register->user_profile,
+        ]);
     }
 
     public function updateUserRole(Request $request)
@@ -127,31 +147,30 @@ class UserController extends Controller
         $user = Auth::user();
 
         if ($user === null) {
-            return response()->json(['message' => 'Unauthorized user'], 401);
+            return response()->json(["message" => "Unauthorized user"], 401);
         }
 
-        if ($user->role !== 'admin') {
-            return response()->json(['message' => 'Permission denied'], 403);
+        if ($user->role !== "admin") {
+            return response()->json(["message" => "Permission denied"], 403);
         }
 
         // Validate the request data todo list
         $validator = Validator::make($request->post(), [
-            'role' => 'required|string|between:2,10',
+            "role" => "required|string|between:2,10",
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
         }
 
-        $user = UserProfile::find($request->route('id'));
+        $user = UserProfile::find($request->route("id"));
 
         $data = $request->post();
 
         // Update the user
         $user->update($data);
 
-
-        return response()->json(['user' => $user]);
+        return response()->json(["user" => $user]);
     }
 
     public function getUserStatus(Request $request)
@@ -160,14 +179,14 @@ class UserController extends Controller
         $user = Auth::user();
 
         if ($user === null) {
-            return response()->json(['message' => 'Unauthorized user'], 401);
+            return response()->json(["message" => "Unauthorized user"], 401);
         }
 
-        if ($user->role !== 'admin') {
-            return response()->json(['message' => 'Permission denied'], 403);
+        if ($user->role !== "admin") {
+            return response()->json(["message" => "Permission denied"], 403);
         }
 
-        $user_status = UserProfile::find($request->route('id'))->status;
+        $user_status = UserProfile::find($request->route("id"))->status;
         return response()->json($user_status);
     }
 }

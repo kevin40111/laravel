@@ -164,6 +164,10 @@
         - Update User Profile: [PATCH] http://localhost:8080/api/update_user/{user_id}
             - check user profile table if exists user_id
         - Update User Role: [POST] http://localhost:8080/api/update_user_role/{user_id}
+    
+    - Model
+      - user_register <-> user_profile ( one-to-one )
+        - auto link user_register id to user_profile user_id
 
     - return status
         - bearer token error: 'Unauthorized user', http-401
