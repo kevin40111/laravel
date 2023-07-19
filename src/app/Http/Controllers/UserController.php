@@ -150,9 +150,9 @@ class UserController extends Controller
             return response()->json(["message" => "Unauthorized user"], 401);
         }
 
-        if ($user->role !== "admin") {
-            return response()->json(["message" => "Permission denied"], 403);
-        }
+        // if ($user->role !== "admin") {
+        //     return response()->json(["message" => "Permission denied"], 403);
+        // }
 
         // Validate the request data todo list
         $validator = Validator::make($request->post(), [
@@ -163,14 +163,39 @@ class UserController extends Controller
             return response()->json($validator->errors()->toJson(), 400);
         }
 
-        $user = UserProfile::find($request->route("id"));
+        $target_user = UserRegister::find($request->route("id"));
+        if ($target_user === null) {
+            return response()->json(
+                ["message" => "Target user not found"],
+                404
+            );
+        }
+
+        // check user_register'user exists in user profile table
+        $user_register = UserRegister::with("user_profile")->findOrFail(
+            $request->route("id")
+        );
 
         $data = $request->post();
 
-        // Update the user
-        $user->update($data);
+        if ($user_register->user_profile === null) {
+            // user doesn't exist in user profile
+            $new_user_profile = new UserProfile($data);
+            $new_user_profile["username"] = $user["username"];
+            $new_user_profile["email"] = $user["email"];
+            $user_register->user_profile()->save($new_user_profile);
+        } else {
+            // Update the user in user profile
+            $user_register->user_profile->update($data);
+        }
 
-        return response()->json(["user" => $user]);
+        $user_register = UserRegister::with("user_profile")->findOrFail(
+            $request->route("id")
+        );
+
+        return response()->json([
+            "user_profile" => $user_register->user_profile,
+        ]);
     }
 
     public function getUserStatus(Request $request)
