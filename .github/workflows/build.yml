@@ -15,7 +15,6 @@ jobs:
       - name: Install dependencies
         uses: php-actions/composer@v6
         with:
-          dev: no
           args: --working-dir src --profile --ignore-platform-reqs
 
       - name: Login to GitHub Container Registry
