@@ -13,6 +13,8 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $table = "user";
+
     public $timestamps = true;
 
     /**

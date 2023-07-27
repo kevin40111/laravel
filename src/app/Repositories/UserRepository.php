@@ -41,9 +41,9 @@ class UserRepository
     public function find(int $id)
     {
         $user = User::query()
-            ->where("users.id", $id)
-            ->join("role", "role.id", "=", "users.role_id")
-            ->select("users.*", "role.name as role")
+            ->where("user.id", $id)
+            ->join("role", "role.id", "=", "user.role_id")
+            ->select("user.*", "role.name as role")
             ->first();
 
         return $user;
@@ -57,8 +57,8 @@ class UserRepository
     {
         $user = User::query()
             ->where("email", $email)
-            ->join("role", "role.id", "=", "users.role_id")
-            ->select("users.*", "role.name as role")
+            ->join("role", "role.id", "=", "user.role_id")
+            ->select("user.*", "role.name as role")
             ->first();
 
         return $user;
@@ -67,8 +67,8 @@ class UserRepository
     public function fetchItems(int $page = 0, int $size = 10)
     {
         $users = User::query()
-            ->join("role", "role.id", "=", "users.role_id")
-            ->select("users.*", "role.name as role")
+            ->join("role", "role.id", "=", "user.role_id")
+            ->select("user.*", "role.name as role")
             ->skip($page)
             ->take($size)
             ->get();
@@ -79,8 +79,8 @@ class UserRepository
     public function fetchItemsCount()
     {
         $count = User::query()
-            ->join("role", "role.id", "=", "users.role_id")
-            ->select("users.*", "role.name as role")
+            ->join("role", "role.id", "=", "user.role_id")
+            ->select("user.*", "role.name as role")
             ->count();
 
         return $count;
