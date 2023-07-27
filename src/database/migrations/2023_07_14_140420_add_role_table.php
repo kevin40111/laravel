@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\Role;
-use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,52 +10,51 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        try {
-            Schema::create("role", function (Blueprint $table) {
-                $table->id();
-                $table->string("name");
-                $table->timestamps();
-            });
+        Schema::create("role", function (Blueprint $table) {
+            $table->id();
+            $table->string("name");
+            $table->timestamps();
+        });
 
-            Role::insert([
-                [
-                    "name" => "client",
-                    "created_at" => now(),
-                    "updated_at" => now(),
-                ],
-                [
-                    "name" => "admin",
-                    "created_at" => now(),
-                    "updated_at" => now(),
-                ],
-            ]);
+        DB::table("role")->insert([
+            [
+                "name" => "client",
+                "created_at" => now(),
+                "updated_at" => now(),
+            ],
+            [
+                "name" => "admin",
+                "created_at" => now(),
+                "updated_at" => now(),
+            ],
+        ]);
 
-            Schema::table("users", function (Blueprint $table) {
-                $table
-                    ->unsignedBigInteger("role_id")
-                    ->nullable()
-                    ->after("status");
-                $table
-                    ->foreign("role_id", "users_role_id_foreign")
-                    ->references("id")
-                    ->on("role")
-                    ->nullOnDelete();
-            });
+        Schema::table("users", function (Blueprint $table) {
+            $table
+                ->unsignedBigInteger("role_id")
+                ->nullable()
+                ->after("status");
+            $table
+                ->foreign("role_id", "users_role_id_foreign")
+                ->references("id")
+                ->on("role")
+                ->nullOnDelete();
+        });
 
-            User::where("role", "client")->update(["role_id" => 1]);
-            User::where("role", "admin")->update(["role_id" => 2]);
+        DB::table("users")
+            ->where("role", "client")
+            ->update(["role_id" => 1]);
+        DB::table("users")
+            ->where("role", "admin")
+            ->update(["role_id" => 2]);
 
-            Schema::table("users", function (Blueprint $table) {
-                $table->dropColumn("role");
-                $table
-                    ->unsignedBigInteger("role_id")
-                    ->default(1)
-                    ->change();
-            });
-        } catch (PDOException $exception) {
-            $this->down();
-            throw $exception;
-        }
+        Schema::table("users", function (Blueprint $table) {
+            $table->dropColumn("role");
+            $table
+                ->unsignedBigInteger("role_id")
+                ->default(1)
+                ->change();
+        });
     }
 
     /**
@@ -69,8 +66,12 @@ return new class extends Migration {
             $table->string("role")->default("client");
         });
 
-        User::where("role_id", 1)->update(["role" => "client"]);
-        User::where("role_id", 2)->update(["role" => "admin"]);
+        DB::table("users")
+            ->where("role_id", 1)
+            ->update(["role" => "client"]);
+        DB::table("users")
+            ->where("role_id", 2)
+            ->update(["role" => "admin"]);
 
         Schema::table("users", function (Blueprint $table) {
             $table->dropForeign("users_role_id_foreign");
