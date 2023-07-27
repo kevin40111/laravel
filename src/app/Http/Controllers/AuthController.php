@@ -54,16 +54,6 @@ class AuthController extends Controller
         ];
 
         return response()->json($response, 200);
-
-    }
-  
-    private function isUserExist(string $email)
-    {
-        $user = UserRegister::where("email", $email)->first();
-        if (is_null($user)) {
-            return false;
-        }
-        return true;
     }
 
     /**
