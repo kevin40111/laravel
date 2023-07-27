@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\UserProfile;
-use App\Models\UserRegister;
+use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Validator;
 use Illuminate\Support\Facades\Hash;
+use Validator;
 
 class UserController extends Controller
 {
+    public function __construct(protected UserRepository $users)
+    {
+    }
+
     /**
      * Get the authenticated User.
      *
@@ -19,7 +21,77 @@ class UserController extends Controller
      */
     public function userProfile()
     {
-        return response()->json(auth()->user());
+        $id = auth()->id();
+        $user = $this->users->find($id);
+        if (is_null($user)) {
+            return response()->json(["message" => "User not found"], 401);
+        }
+
+        if ($user->status !== "active") {
+            return response()->json(
+                ["message" => "User is not activated"],
+                401
+            );
+        }
+
+        return response()->json($user);
+    }
+
+    public function getUsers(Request $request)
+    {
+        $validator = Validator::make($request->query(), [
+            "page" => "required|integer",
+            "size" => "required|integer|between:2,10",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+        $validated = $validator->validated();
+
+        $profiles = $this->users->fetchItems(
+            $validated["page"],
+            $validated["size"]
+        );
+        $count = $this->users->fetchItemsCount();
+        $totalPages = ceil($count / $validated["size"]);
+
+        return response()->json([
+            "content" => $profiles,
+            "pageable" => [
+                "pageNumber" => $validated["page"],
+                "pageSize" => $validated["size"],
+                "totalPages" => $totalPages,
+            ],
+        ]);
+    }
+
+    public function getUser(Request $request)
+    {
+        $id = $request->route("id");
+        $user = $this->users->find($id);
+
+        return response()->json($user);
+    }
+
+    public function updateUser(Request $request)
+    {
+        $id = $request->route("id");
+        $validator = Validator::make($request->post(), [
+            "username" => "required|string|between:2,100",
+            "fullName" => "required|string",
+            "status" => "required|string",
+            "role" => "required|string",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        $validated = $validator->validated();
+        $user = $this->users->update($id, $validated);
+
+        return response()->json($user);
     }
 
     /**
@@ -53,165 +125,5 @@ class UserController extends Controller
             ["message" => "Password successfully changed."],
             200
         );
-    }
-
-    public function getUserList()
-    {
-        // 取得目前已認證的使用者
-        $user = Auth::user();
-
-        if ($user === null) {
-            return response()->json(["message" => "Unauthorized user"], 401);
-        }
-
-        if ($user->role !== "admin") {
-            return response()->json(["message" => "Permission denied"], 403);
-        }
-
-        $users = UserProfile::all();
-        return response()->json($users);
-    }
-
-    public function getUserProfile(Request $request)
-    {
-        // 取得目前已認證的使用者
-        $user = Auth::user();
-
-        if ($user === null) {
-            return response()->json(["message" => "Unauthorized user"], 401);
-        }
-
-        if ($user->role !== "admin") {
-            return response()->json(["message" => "Permission denied"], 403);
-        }
-
-        $user_by_id = UserProfile::find($request->route("id"));
-
-        return response()->json($user_by_id);
-    }
-
-    public function updateUserProfile(Request $request)
-    {
-        // 取得目前已認證的使用者
-        $user = Auth::user();
-
-        if ($user === null) {
-            return response()->json(
-                ["message" => "Unauthorized user", "user" => $user],
-                401
-            );
-        }
-
-        // if ($user->role !== 'admin') {
-        //     return response()->json(['message' => 'Permission denied'], 403);
-        // }
-
-        $target_user = UserRegister::find($request->route("id"));
-        if ($target_user === null) {
-            return response()->json(
-                ["message" => "Target user not found"],
-                404
-            );
-        }
-
-        // check user_register'user exists in user profile table
-        $user_register = UserRegister::with("user_profile")->findOrFail(
-            $request->route("id")
-        );
-
-        $data = $request->post();
-
-        if ($user_register->user_profile === null) {
-            // user doesn't exist in user profile
-            $new_user_profile = new UserProfile($data);
-            $new_user_profile["username"] = $user["username"];
-            $new_user_profile["email"] = $user["email"];
-            $user_register->user_profile()->save($new_user_profile);
-        } else {
-            // Update the user in user profile
-            $user_register->user_profile->update($data);
-        }
-
-        $user_register = UserRegister::with("user_profile")->findOrFail(
-            $request->route("id")
-        );
-
-        return response()->json([
-            "user_profile" => $user_register->user_profile,
-        ]);
-    }
-
-    public function updateUserRole(Request $request)
-    {
-        // 取得目前已認證的使用者
-        $user = Auth::user();
-
-        if ($user === null) {
-            return response()->json(["message" => "Unauthorized user"], 401);
-        }
-
-        // if ($user->role !== "admin") {
-        //     return response()->json(["message" => "Permission denied"], 403);
-        // }
-
-        // Validate the request data todo list
-        $validator = Validator::make($request->post(), [
-            "role" => "required|string|between:2,10",
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
-        }
-
-        $target_user = UserRegister::find($request->route("id"));
-        if ($target_user === null) {
-            return response()->json(
-                ["message" => "Target user not found"],
-                404
-            );
-        }
-
-        // check user_register'user exists in user profile table
-        $user_register = UserRegister::with("user_profile")->findOrFail(
-            $request->route("id")
-        );
-
-        $data = $request->post();
-
-        if ($user_register->user_profile === null) {
-            // user doesn't exist in user profile
-            $new_user_profile = new UserProfile($data);
-            $new_user_profile["username"] = $user["username"];
-            $new_user_profile["email"] = $user["email"];
-            $user_register->user_profile()->save($new_user_profile);
-        } else {
-            // Update the user in user profile
-            $user_register->user_profile->update($data);
-        }
-
-        $user_register = UserRegister::with("user_profile")->findOrFail(
-            $request->route("id")
-        );
-
-        return response()->json([
-            "user_profile" => $user_register->user_profile,
-        ]);
-    }
-
-    public function getUserStatus(Request $request)
-    {
-        // 取得目前已認證的使用者
-        $user = Auth::user();
-
-        if ($user === null) {
-            return response()->json(["message" => "Unauthorized user"], 401);
-        }
-
-        if ($user->role !== "admin") {
-            return response()->json(["message" => "Permission denied"], 403);
-        }
-
-        $user_status = UserProfile::find($request->route("id"))->status;
-        return response()->json($user_status);
     }
 }

@@ -66,16 +66,13 @@ Route::group(
     ],
     function ($router) {
         Route::get("/auth/me", [UserController::class, "userProfile"]);
-        Route::get("/get_user_list", [UserController::class, "getUserList"]);
-        Route::get("/user/{id}", [UserController::class, "getUserProfile"]);
-        Route::get("/user-profile", [UserController::class, "userProfile"]);
-        Route::get('/user-status/{id}', [UserController::class, 'getUserStatus']);
+        Route::get("/users", [UserController::class, "getUsers"]);
+        Route::get("/users/{id}", [UserController::class, "getUser"]);
+        Route::patch("/users/{id}", [UserController::class, "updateUser"]);
+
         Route::post("/password/change", [
             UserController::class,
             "changePassword",
         ]);
-        Route::patch('/update_user/{id}', [UserController::class, 'updateUserProfile']);
-        Route::post('/update_user_role/{id}', [UserController::class, 'updateUserRole']);
     }
 );
-
