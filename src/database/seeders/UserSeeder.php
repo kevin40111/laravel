@@ -2,11 +2,16 @@
 
 namespace Database\Seeders;
 
+use App\Repositories\UserRepository;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Seeder;
-use App\Models\User;
 
-class DatabaseSeeder extends Seeder
+class UserSeeder extends Seeder
 {
+    public function __construct(protected UserRepository $users)
+    {
+    }
+
     /**
      * Seed the application's database.
      */
@@ -14,24 +19,29 @@ class DatabaseSeeder extends Seeder
     {
         $users = [
             [
-                "role" => "admin",
                 "password" => bcrypt("admin"),
-                "fullName" => "John Doe111",
+                "fullName" => "John Doe",
                 "username" => "johndoe",
                 "email" => "admin@vuexy.com",
+                "role" => "admin",
                 "created_at" => now(),
                 "updated_at" => now(),
             ],
             [
-                "role" => "client",
                 "password" => bcrypt("client"),
                 "fullName" => "Jane Doe",
                 "username" => "janedoe",
                 "email" => "client@vuexy.com",
+                "role" => "client",
                 "created_at" => now(),
                 "updated_at" => now(),
-            ]
+            ],
         ];
-        User::insert($users);
+
+        DB::transaction(function () use ($users) {
+            foreach ($users as $user) {
+                $this->users->create($user);
+            }
+        });
     }
 }

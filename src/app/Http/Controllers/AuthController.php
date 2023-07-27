@@ -47,11 +47,16 @@ class AuthController extends Controller
             return response()->json(["message" => "Password incorrect"], 401);
         }
 
-        $userData = auth()->user();
+        if ($user->status !== "active") {
+            return response()->json(
+                ["message" => "User is not activated"],
+                401
+            );
+        }
 
         $response = [
             "accessToken" => $token,
-            "userData" => $userData,
+            "userData" => $user,
         ];
 
         return response()->json($response, 200);

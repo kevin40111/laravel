@@ -66,8 +66,10 @@ Route::group(
     ],
     function ($router) {
         Route::get("/auth/me", [UserController::class, "userProfile"]);
-        Route::get("/get_user_list", [UserController::class, "getUserList"]);
-        Route::get("/get_user/{id}", [UserController::class, "getUserInfo"]);
+        Route::get("/users", [UserController::class, "getUsers"]);
+        Route::get("/users/{id}", [UserController::class, "getUser"]);
+        Route::patch("/users/{id}", [UserController::class, "updateUser"]);
+
         Route::post("/password/change", [
             UserController::class,
             "changePassword",
