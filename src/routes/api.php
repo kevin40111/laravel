@@ -55,7 +55,7 @@ Route::group(
 
 Route::group(
     [
-        "middleware" => ["api"],
+        "middleware" => ["api", "auth", "role:admin"],
         "prefix" => "/",
     ],
     function ($router) {
