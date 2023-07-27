@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\UserRegister;
-use App\Models\ResetCodePassword;
 use App\Mail\RegisterMail;
 use App\Mail\ResetPasswordMail;
+use App\Models\ResetCodePassword;
+use App\Models\UserRegister;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
-
 use Ramsey\Uuid\Uuid;
 
 class AuthController extends Controller
