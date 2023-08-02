@@ -17,7 +17,8 @@
   },
   "lint-staged": {
     "*.php": [
-      "prettier --write"
+      "prettier --write",
+      "src/vendor/bin/phpinsights analyse --flush-cache -n --fix -c phpinsights.php"
     ]
   }
 }
