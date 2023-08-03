@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -25,7 +27,7 @@ Route::group(
         "middleware" => ["api"],
         "prefix" => "auth",
     ],
-    function ($router) {
+    function ($router): void {
         // TODO: remove this route?
         Route::post("/logout", [AuthController::class, "logout"]);
 
@@ -55,11 +57,20 @@ Route::group(
 
 Route::group(
     [
+        "middleware" => ["api", "auth", "role:admin,client"],
+        "prefix" => "/",
+    ],
+    function ($router): void {
+        Route::get("/auth/me", [UserController::class, "userProfile"]);
+    }
+);
+
+Route::group(
+    [
         "middleware" => ["api", "auth", "role:admin"],
         "prefix" => "/",
     ],
-    function ($router) {
-        Route::get("/auth/me", [UserController::class, "userProfile"]);
+    function ($router): void {
         Route::get("/users", [UserController::class, "getUsers"]);
         Route::get("/users/{id}", [UserController::class, "getUser"]);
         Route::patch("/users/{id}", [UserController::class, "updateUser"]);
