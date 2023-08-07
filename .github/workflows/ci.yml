@@ -1,0 +1,33 @@
+on:
+   push
+
+name: 🚀 CI
+jobs:
+   build-test:
+     name: 🎉 Verify Unitest
+     runs-on: ubuntu-latest
+     services:
+      mysql:
+        image: mysql:8.0.21
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: unittest
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+     steps:
+       - name: 🚚 Get latest code
+         uses: actions/checkout@v3
+
+       - name: Verify unittest DB exists
+         run: mysql --host 127.0.0.1 --port 3306 -uroot -e "SHOW DATABASES LIKE 'unittest'"
+
+       - name: Install dependencies
+         uses: php-actions/composer@v6
+         with:
+           args: --working-dir src --profile --ignore-platform-reqs
+
+       - uses: php-actions/phpunit@v3
+         with:
+           php_extensions: mysqli pdo_mysql
+           configuration: "src/phpunit.xml"
